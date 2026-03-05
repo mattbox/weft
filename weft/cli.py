@@ -29,28 +29,35 @@ from weft.parser.znc import (
 from weft.visualization.visjs import render_html
 
 
-@click.group()
-def cli() -> None:
-    """weft — IRC social network visualizer."""
-
-
-@cli.command()
+@click.command()
 @click.argument("path", type=click.Path(exists=True))
 @click.option(
     "--output",
     "-o",
     default="weft-output.html",
     show_default=True,
+    metavar="FILE",
     help="Output HTML file.",
 )
 @click.option(
-    "--from", "from_date", default=None, help="Start date filter (YYYY-MM-DD)."
+    "--from",
+    "from_date",
+    default=None,
+    metavar="DATE",
+    help="Start date filter (YYYY-MM-DD).",
 )
-@click.option("--to", "to_date", default=None, help="End date filter (YYYY-MM-DD).")
+@click.option(
+    "--to",
+    "to_date",
+    default=None,
+    metavar="DATE",
+    help="End date filter (YYYY-MM-DD).",
+)
 @click.option(
     "--ignore",
     "ignore_nicks",
     multiple=True,
+    metavar="NICK",
     help="Ignore a nick (repeatable, case-insensitive).",
 )
 @click.option(
@@ -60,6 +67,7 @@ def cli() -> None:
     "--ai-model",
     default="ollama/llama3.2",
     show_default=True,
+    metavar="MODEL",
     help="litellm model string.",
 )
 @click.option(
@@ -67,6 +75,7 @@ def cli() -> None:
     "save_state",
     default=None,
     type=click.Path(),
+    metavar="FILE",
     help="Save graph state to JSON.",
 )
 @click.option(
@@ -74,6 +83,7 @@ def cli() -> None:
     "load_state",
     default=None,
     type=click.Path(exists=True),
+    metavar="FILE",
     help="Load existing graph state.",
 )
 @click.option(
@@ -86,7 +96,7 @@ def cli() -> None:
 @click.option(
     "--no-decay", is_flag=True, default=False, help="Disable temporal decay entirely."
 )
-def process(
+def cli(
     path: str,
     output: str,
     from_date: str | None,
@@ -99,9 +109,8 @@ def process(
     decay_amount: float,
     no_decay: bool,
 ) -> None:
-    """Process a ZNC log file or directory and output an HTML graph.
-
-    PATH may be a single .log file or a directory containing YYYY-MM-DD.log files.
+    """
+    PATH    may be a single .log file or a directory containing YYYY-MM-DD.log files.
     """
     p = Path(path)
 

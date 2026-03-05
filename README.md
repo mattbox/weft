@@ -1,8 +1,12 @@
 # weft
 
-**weft** is an IRC social network visualizer based on the original [Piespy](https://github.com/mchelen/piespy) model of using heuristic analysis to infer relationships between pairs of users.
+**weft** is an IRC social network visualizer based on [Piespy](https://github.com/mchelen/piespy) model of using heuristic analysis to infer relationships between pairs of users.
 
 It reads ZNC log files and generates an interactive HTML graph showing the relationships between IRC users — built on [vis.js](https://visjs.org/).
+
+## Example
+
+See a [live example](https://mattbox.github.io/weft/).
 
 ## Features
 
@@ -28,29 +32,29 @@ uv sync --extra ai
 
 ```bash
 # Process a single log file
-uv run weft process 2025-10-05.log
+uv run weft 2025-10-05.log
 
 # Process a directory of logs, output to custom file
-uv run weft process /var/log/znc/channel/ -o graph.html
+uv run weft /var/log/znc/channel/ -o graph.html
 
 # Filter by date range
-uv run weft process /var/log/znc/channel/ --from 2025-09-01 --to 2025-10-01
+uv run weft /var/log/znc/channel/ --from 2025-09-01 --to 2025-10-01
 
 # Ignore bots and service nicks
-uv run weft process 2025-10-05.log --ignore NickServ --ignore helpfulbot
+uv run weft 2025-10-05.log --ignore NickServ --ignore helpfulbot
 
 # Enable AI-assisted heuristic
-uv run weft process 2025-10-05.log --ai --ai-model ollama/llama3.2
+uv run weft 2025-10-05.log --ai --ai-model ollama/llama3.2
 
 # Save and reload graph state across runs
-uv run weft process day1.log --save-state state.json
-uv run weft process day2.log --load-state state.json --save-state state.json
+uv run weft day1.log --save-state state.json
+uv run weft day2.log --load-state state.json --save-state state.json
 ```
 
 ## CLI Reference
 
 ```
-weft process <path> [OPTIONS]
+weft <path> [OPTIONS]
 
 Arguments:
   PATH    ZNC log file or directory of YYYY-MM-DD.log files
