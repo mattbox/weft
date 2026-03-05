@@ -1,0 +1,18 @@
+[inference]
+direct_addressing_weight = 1.0
+indirect_addressing_weight = 0.5
+adjacency_weight = 0.2
+binary_sequence_weight = 0.8
+binary_sequence_window = 5
+ai_enabled = false
+ai_model = "ollama/llama3.2"
+
+[decay]
+enabled = true
+amount = 0.02
+
+[graph]
+ignore_nicks = ["chanserv", "nickserv"]
+
+[output]
+default_filename = "weft-output.html"

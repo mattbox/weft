@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>weft — IRC Social Graph</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 10px 16px;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    header h1 { font-size: 1.1rem; color: #58a6ff; }
+    header .subtitle { font-size: 0.8rem; color: #8b949e; }
+
+    .layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    #network {
+      flex: 1;
+      height: 100%;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #161b22;
+      border-left: 1px solid #30363d;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar h2 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #8b949e;
+      border-bottom: 1px solid #30363d;
+      padding-bottom: 6px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.82rem;
+      color: #c9d1d9;
+    }
+
+    input[type="range"] {
+      accent-color: #58a6ff;
+      width: 100%;
+    }
+
+    input[type="text"] {
+      padding: 5px 8px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #0d1117;
+      color: #e6edf3;
+      font-size: 0.82rem;
+      outline: none;
+      width: 100%;
+    }
+    input[type="text"]:focus { border-color: #58a6ff; }
+    input[type="text"]::placeholder { color: #484f58; }
+
+    .value-display {
+      color: #58a6ff;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    button {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #21262d;
+      color: #c9d1d9;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: background 0.15s;
+    }
+
+    button:hover { background: #30363d; }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-row button { flex: 1; }
+
+    .stats {
+      font-size: 0.78rem;
+      color: #8b949e;
+      line-height: 1.6;
+    }
+
+    .stats b { color: #c9d1d9; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🧵 weft</h1>
+    <span class="subtitle">IRC Social Graph &mdash; {{ node_count }} users &mdash; {{ edge_count }} relationships</span>
+  </header>
+
+  <div class="layout">
+    <div id="network"></div>
+
+    <aside class="sidebar">
+      <section>
+        <h2>Search</h2>
+        <input type="text" id="nick-search" placeholder="Find a nick…" autocomplete="off" />
+      </section>
+
+      <section>
+        <h2>Edge Filter</h2>
+        <label>
+          Min relationship weight
+          <input type="range" id="threshold" min="0" max="{{ max_weight }}" step="0.05" value="0" />
+          <span class="value-display" id="threshold-val">0.00</span>
+        </label>
+      </section>
+
+      <section>
+        <h2>Controls</h2>
+        <div class="btn-row">
+          <button id="toggle-physics">Disable Physics</button>
+          <button id="fit-btn">Fit View</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Stats</h2>
+        <div class="stats" id="stats">
+          Nodes: <b>{{ node_count }}</b><br>
+          Edges: <b>{{ edge_count }}</b><br>
+          Max weight: <b>{{ "%.2f"|format(max_weight) }}</b><br>
+          Most active: <b>{{ most_active }}</b>
+        </div>
+      </section>
+
+      <section>
+        <h2>Selection</h2>
+        <div class="stats" id="selection-info">Click a node or edge to inspect.</div>
+      </section>
+    </aside>
+  </div>
+
+  <script>
+    // ---- Data ----
+    const rawNodes = {{ nodes_json }};
+    const rawEdges = {{ edges_json }};
+
+    // ---- Deterministic colour from nick ----
+    const palette = [
+      "#58a6ff","#3fb950","#d2a8ff","#ffa657","#ff7b72",
+      "#79c0ff","#56d364","#bc8cff","#ffb86c","#f97583",
+      "#a5d6ff","#7ee787","#e2c5ff","#ffc680","#ffa198",
+    ];
+
+    function hashNick(nick) {
+      let h = 0;
+      for (let i = 0; i < nick.length; i++) {
+        h = ((h << 5) - h + nick.charCodeAt(i)) | 0;
+      }
+      return Math.abs(h);
+    }
+
+    function nickColor(nick) {
+      return palette[hashNick(nick) % palette.length];
+    }
+
+    // ---- Scale helpers ----
+    const msgCounts = rawNodes.map(n => n.message_count);
+    const maxMsg = Math.max(...msgCounts, 1);
+    const minSize = 12, maxSize = 50;
+
+    function nodeSize(count) {
+      // Use sqrt scaling so high-count nodes don't dominate too much
+      return minSize + (Math.sqrt(count) / Math.sqrt(maxMsg)) * (maxSize - minSize);
+    }
+
+    const weights = rawEdges.map(e => e.weight);
+    const maxW = Math.max(...weights, 1);
+    const minWidth = 1, maxWidth = 10;
+
+    function edgeWidth(w) {
+      return minWidth + (w / maxW) * (maxWidth - minWidth);
+    }
+
+    // ---- Build vis datasets ----
+    function buildNodes(threshold) {
+      const connected = new Set();
+      rawEdges.forEach(e => {
+        if (e.weight >= threshold) {
+          connected.add(e.source);
+          connected.add(e.target);
+        }
+      });
+
+      return rawNodes
+        .filter(n => threshold === 0 || connected.has(n.id))
+        .map(n => ({
+          id: n.id,
+          label: n.id,
+          title: `${n.id}\nMessages: ${n.message_count}`,
+          size: nodeSize(n.message_count),
+          color: {
+            background: nickColor(n.id),
+            border: "#0d1117",
+            highlight: { background: nickColor(n.id), border: "#ffffff" },
+          },
+          font: { color: "#e6edf3", size: 13, strokeWidth: 2, strokeColor: "#0d1117" },
+          borderWidth: 2,
+          message_count: n.message_count,
+        }));
+    }
+
+    function buildEdges(threshold) {
+      let id = 0;
+      return rawEdges
+        .filter(e => e.weight >= threshold)
+        .map(e => ({
+          id: id++,
+          from: e.source,
+          to: e.target,
+          value: e.weight,
+          width: edgeWidth(e.weight),
+          title: `${e.source} ↔ ${e.target}<br>Strength: ${e.weight.toFixed(2)}`,
+          color: { color: "rgba(88,166,255,0.25)", highlight: "#58a6ff", opacity: 0.7 },
+          smooth: { type: "continuous" },
+          source: e.source,
+          target: e.target,
+          weight: e.weight,
+        }));
+    }
+
+    const nodesDS = new vis.DataSet(buildNodes(0));
+    const edgesDS = new vis.DataSet(buildEdges(0));
+
+    const container = document.getElementById("network");
+    const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
+      physics: {
+        enabled: true,
+        barnesHut: {
+          gravitationalConstant: -8000,
+          centralGravity: 0.3,
+          springLength: 140,
+          springConstant: 0.04,
+          damping: 0.09,
+        },
+        stabilization: { iterations: 150 },
+      },
+      interaction: {
+        hover: true,
+        tooltipDelay: 150,
+        multiselect: false,
+      },
+      edges: {
+        arrows: { to: { enabled: false } },
+        scaling: { min: 1, max: 10 },
+      },
+      nodes: {
+        shape: "dot",
+        scaling: { min: minSize, max: maxSize },
+      },
+    });
+
+    // ---- Threshold slider ----
+    const slider = document.getElementById("threshold");
+    const thresholdVal = document.getElementById("threshold-val");
+
+    slider.addEventListener("input", () => {
+      const t = parseFloat(slider.value);
+      thresholdVal.textContent = t.toFixed(2);
+      nodesDS.clear();
+      edgesDS.clear();
+      nodesDS.add(buildNodes(t));
+      edgesDS.add(buildEdges(t));
+    });
+
+    // ---- Nick search ----
+    const searchInput = document.getElementById("nick-search");
+
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.trim().toLowerCase();
+      if (!q) {
+        // Reset all node colors
+        nodesDS.forEach(n => {
+          nodesDS.update({ id: n.id, opacity: 1.0, font: { ...n.font, color: "#e6edf3" } });
+        });
+        return;
+      }
+      // Find matching node
+      const match = rawNodes.find(n => n.id.toLowerCase().includes(q));
+      if (match) {
+        network.selectNodes([match.id]);
+        network.focus(match.id, { scale: 1.2, animation: { duration: 400, easingFunction: "easeInOutQuad" } });
+        showNodeInfo(match.id);
+      }
+    });
+
+    searchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        searchInput.value = "";
+        searchInput.dispatchEvent(new Event("input"));
+        network.unselectAll();
+      }
+    });
+
+    // ---- Physics toggle ----
+    let physicsOn = true;
+    const toggleBtn = document.getElementById("toggle-physics");
+    toggleBtn.addEventListener("click", () => {
+      physicsOn = !physicsOn;
+      network.setOptions({ physics: { enabled: physicsOn } });
+      toggleBtn.textContent = physicsOn ? "Disable Physics" : "Enable Physics";
+    });
+
+    document.getElementById("fit-btn").addEventListener("click", () => {
+      network.fit({ animation: { duration: 500, easingFunction: "easeInOutQuad" } });
+    });
+
+    // ---- Selection info ----
+    const selInfo = document.getElementById("selection-info");
+
+    function showNodeInfo(nodeId) {
+      const nodeData = rawNodes.find(n => n.id === nodeId);
+      if (!nodeData) return;
+
+      // Find connected edges + neighbors
+      const connections = rawEdges
+        .filter(e => e.source === nodeId || e.target === nodeId)
+        .map(e => ({
+          nick: e.source === nodeId ? e.target : e.source,
+          weight: e.weight,
+        }))
+        .sort((a, b) => b.weight - a.weight)
+        .slice(0, 8);
+
+      let html = `<b>${nodeId}</b><br>Messages: ${nodeData.message_count}`;
+      if (connections.length > 0) {
+        html += `<br><br><b>Top connections:</b>`;
+        connections.forEach(c => {
+          html += `<br>&nbsp;&nbsp;${c.nick}: ${c.weight.toFixed(2)}`;
+        });
+      }
+      selInfo.innerHTML = html;
+    }
+
+    network.on("selectNode", (params) => {
+      if (params.nodes.length === 0) return;
+      showNodeInfo(params.nodes[0]);
+    });
+
+    network.on("selectEdge", (params) => {
+      if (params.edges.length === 0) return;
+      const edgeId = params.edges[0];
+      const edgeData = edgesDS.get(edgeId);
+      if (!edgeData) return;
+      selInfo.innerHTML = `<b>${edgeData.source}</b> ↔ <b>${edgeData.target}</b><br>Strength: ${edgeData.weight.toFixed(3)}`;
+    });
+
+    network.on("deselectNode", () => { selInfo.textContent = "Click a node or edge to inspect."; });
+    network.on("deselectEdge", () => { selInfo.textContent = "Click a node or edge to inspect."; });
+
+    // ---- Keyboard shortcuts ----
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "/" && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+  </script>
+</body>
+</html>

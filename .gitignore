@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[codz]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Unit test / coverage reports
+.pytest_cache/
+.ruff_cache/
+*.pkl
+*.tox
+*.json
+
+# Environments
+.venv/
+venv/
+
+# I/O Files
+logs/
+*.html
+!weft/visualization/templates/*.j2
+!config.toml
+
+# AI
+CLAUDE.md

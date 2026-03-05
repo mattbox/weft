@@ -1,0 +1,119 @@
+[00:00:02] <glitch> neonwave: no it wasn't
+[00:01:57] <neonwave> .timer 10 I'm tired of waiting for builds
+[00:03:06] <hexdump> boiln't
+[00:03:24] <neonwave> ^
+[00:09:15] <starfall> .np
+[00:10:30] <glitch> starfall: what are you listening to?
+[00:11:02] <starfall> glitch: some old breakbeat stuff
+[00:11:45] <hexdump> starfall has good taste
+[00:12:01] <neonwave> agreed
+[00:15:33] <starfall> thanks hexdump
+[00:20:00] *** Joins: ember (ember_x@user-abcd1234.example.net)
+[00:20:05] <ember> hey everyone
+[00:20:30] <glitch> ember: hey! long time no see
+[00:21:00] <ember> glitch: yeah been busy with work stuff
+[00:25:12] <hexdump> anyone here mess with rust?
+[00:25:40] <neonwave> hexdump: a little, the borrow checker is brutal
+[00:26:01] <hexdump> neonwave: yeah but once it clicks it's great
+[00:26:30] <starfall> I've been meaning to try it
+[00:27:00] <hexdump> starfall: do it, start with the book
+[00:30:00] *** Joins: ratchet (ratchet@user-5678efgh.example.org)
+[00:30:15] <ratchet> sup nerds
+[00:30:45] <glitch> ratchet: the usual
+[00:31:00] <ratchet> anyone see the new kernel release?
+[00:31:30] <neonwave> ratchet: yeah, some good scheduler changes
+[00:32:00] <ratchet> neonwave: the EEVDF stuff? pretty cool
+[00:35:00] * starfall is checking the changelog now
+[00:40:00] <ember> I should update my servers
+[00:40:30] <glitch> ember: careful with production boxes
+[00:41:00] <ember> glitch: lol I learned that the hard way last month
+[00:45:00] *** Quits: ratchet (ratchet@user-5678efgh.example.org) (Quit: later)
+[00:50:00] <hexdump> glitch: you still running gentoo?
+[00:50:30] <glitch> hexdump: yeah on my desktop, nixos on servers now
+[00:51:00] <hexdump> nice, I've been curious about nix
+[00:51:30] <neonwave> nix is great until you need to debug something
+[00:52:00] <glitch> neonwave: fair point lol
+[01:00:00] *** ChanServ sets mode: +qo glitch glitch
+[01:05:00] <starfall> alright I'm out, night everyone
+[01:05:30] <glitch> night starfall
+[01:05:45] <hexdump> later starfall
+[01:06:00] <neonwave> gn
+[01:10:00] *** Quits: starfall (starfall@user-9999wxyz.example.net) (Quit: zzz)
+[01:15:00] <ember> I should sleep too
+[01:15:30] <glitch> same, been a long day
+[01:16:00] <hexdump> lightweights
+[01:16:30] <neonwave> lol
+[01:20:00] *** Parts: ember (ember_x@user-abcd1234.example.net) (Leaving)
+[12:00:00] *** Joins: cipher (cipher@user-aaaa1111.example.com)
+[12:00:30] <cipher> morning
+[12:01:00] <hexdump> cipher: afternoon you mean
+[12:01:30] <cipher> hexdump: time is a construct
+[12:05:00] <glitch> cipher: spoken like someone who just woke up
+[12:05:30] <cipher> glitch: don't judge me
+[12:10:00] <neonwave> has anyone tried the new ollama release?
+[12:10:30] <cipher> neonwave: yeah it's solid, vision models work now
+[12:11:00] <hexdump> cipher: oh nice, which model?
+[12:11:30] <cipher> hexdump: llava mostly, good for memes
+[12:12:00] <glitch> lol "good for memes" is a valid use case now
+[12:15:00] <neonwave> the future is wild
+[12:20:00] * cipher sends a test image to the bot
+[12:25:00] <hexdump> neonwave: you still running that irc bot?
+[12:25:30] <neonwave> hexdump: yeah, added some new features last week
+[12:26:00] <hexdump> nice
+[12:30:00] *** Joins: starfall (starfall@user-9999wxyz.example.net)
+[12:30:15] <starfall> back from the dead
+[12:30:30] <glitch> starfall: wb
+[12:31:00] <starfall> glitch: thanks, did I miss anything?
+[12:31:30] <cipher> starfall: hexdump called you a lightweight
+[12:32:00] <starfall> hexdump: rude
+[12:32:30] <hexdump> starfall: I said it with love
+[12:33:00] <neonwave> lol
+[18:00:00] *** Joins: vortex (vortex@user-bbbb2222.example.net)
+[18:00:15] <vortex> hey channel
+[18:00:30] <glitch> vortex: hey, haven't seen you in ages
+[18:01:00] <vortex> glitch: yeah I was traveling, just got back
+[18:05:00] <starfall> vortex: welcome back!
+[18:05:30] <vortex> starfall: thanks :)
+[18:10:00] <neonwave> vortex: we were just talking about local LLMs earlier
+[18:10:30] <vortex> neonwave: oh cool, I've been experimenting with that too
+[18:11:00] <cipher> vortex: what hardware are you running?
+[18:11:30] <vortex> cipher: 4090, it handles 70B quantized pretty well
+[18:12:00] <hexdump> vortex: jealous
+[18:12:30] <vortex> hexdump: black friday deal, couldn't pass it up
+[18:15:00] <glitch> I'm still on a 3080, it's fine for 7B models
+[18:15:30] <neonwave> glitch: that's all you really need for most stuff honestly
+[18:20:00] * vortex is setting up a new inference server
+[18:25:00] <cipher> alright heading out, catch you all later
+[18:25:15] <glitch> later cipher
+[18:25:30] <hexdump> peace
+[18:26:00] *** Quits: cipher (cipher@user-aaaa1111.example.com) (Quit: gone)
+[21:00:00] <glitch> quiet night
+[21:00:30] <neonwave> yeah everyone dipped
+[21:01:00] <hexdump> just us three
+[21:05:00] <neonwave> hexdump: want to test that bot feature?
+[21:05:30] <hexdump> neonwave: sure, fire it up
+[21:06:00] <neonwave> hexdump: done, try .help
+[21:06:30] <hexdump> .help
+[21:07:00] <hexdump> neonwave: nice, the graph command is cool
+[21:07:30] <neonwave> hexdump: thanks, took a while to get vis.js working right
+[21:10:00] <glitch> you two are such nerds
+[21:10:30] <neonwave> glitch: says the gentoo user
+[21:11:00] <glitch> touché
+[21:15:00] *** drift3 is now known as drift
+[21:19:54] *** Joins: drift (drift@user-cccc3333.example.org)
+[21:20:00] <drift> hey
+[21:20:30] <glitch> drift: hey!
+[21:21:00] <neonwave> drift: welcome
+[21:25:00] <hexdump> alright I'm crashing, night all
+[21:25:15] <glitch> gn hexdump
+[21:25:30] <neonwave> later
+[21:30:00] *** Quits: hexdump (hexdump@user-dddd4444.example.net) (Quit: sleep)
+[23:00:00] <neonwave> glitch: still up?
+[23:00:30] <glitch> neonwave: barely
+[23:01:00] <neonwave> glitch: same, one more commit then bed
+[23:05:00] <glitch> neonwave: what are you working on?
+[23:05:30] <neonwave> glitch: that irc visualizer thing, almost done
+[23:06:00] <glitch> neonwave: oh cool, can't wait to see it
+[23:10:00] <neonwave> alright pushed, night
+[23:10:15] <glitch> night neonwave
+[23:15:00] *** Quits: glitch (glitch@user-eeee5555.example.com) (Quit: zzz)
