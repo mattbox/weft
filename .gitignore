@@ -22,6 +22,7 @@ venv/
 # I/O Files
 logs/
 *.html
+!docs/**
 !weft/visualization/templates/*.j2
 !config.toml
 

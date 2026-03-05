@@ -1,0 +1,116 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+header {
+  padding: 10px 16px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+header h1 { font-size: 1.1rem; color: #58a6ff; }
+header .subtitle { font-size: 0.8rem; color: #8b949e; }
+
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+#network {
+  flex: 1;
+  height: 100%;
+}
+
+.sidebar {
+  width: 260px;
+  background: #161b22;
+  border-left: 1px solid #30363d;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.sidebar h2 {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b949e;
+  border-bottom: 1px solid #30363d;
+  padding-bottom: 6px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: #c9d1d9;
+}
+
+input[type="range"] {
+  accent-color: #58a6ff;
+  width: 100%;
+}
+
+input[type="text"] {
+  padding: 5px 8px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #0d1117;
+  color: #e6edf3;
+  font-size: 0.82rem;
+  outline: none;
+  width: 100%;
+}
+input[type="text"]:focus { border-color: #58a6ff; }
+input[type="text"]::placeholder { color: #484f58; }
+
+.value-display {
+  color: #58a6ff;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+button {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #21262d;
+  color: #c9d1d9;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: background 0.15s;
+}
+
+button:hover { background: #30363d; }
+
+.btn-row {
+  display: flex;
+  gap: 6px;
+}
+.btn-row button { flex: 1; }
+
+.stats {
+  font-size: 0.78rem;
+  color: #8b949e;
+  line-height: 1.6;
+}
+
+.stats b { color: #c9d1d9; }

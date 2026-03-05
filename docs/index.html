@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>weft — IRC Social Graph</title>
+  <link rel="stylesheet" href="graph.css" />
+</head>
+<body>
+  <header>
+    <h1>&#x1f9f5; weft</h1>
+    <span class="subtitle">IRC Social Graph &mdash; 9 users &mdash; 25 relationships</span>
+  </header>
+
+  <div class="layout">
+    <div id="network"></div>
+
+    <aside class="sidebar">
+      <section>
+        <h2>Search</h2>
+        <input type="text" id="nick-search" placeholder="Find a nick…" autocomplete="off" />
+      </section>
+
+      <section>
+        <h2>Edge Filter</h2>
+        <label>
+          Min relationship weight
+          <input type="range" id="threshold" min="0" max="14.459999999999999" step="0.05" value="0" />
+          <span class="value-display" id="threshold-val">0.00</span>
+        </label>
+      </section>
+
+      <section>
+        <h2>Controls</h2>
+        <div class="btn-row">
+          <button id="toggle-physics">Disable Physics</button>
+          <button id="fit-btn">Fit View</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Stats</h2>
+        <div class="stats" id="stats">
+          Nodes: <b>9</b><br>
+          Edges: <b>25</b><br>
+          Max weight: <b>14.46</b><br>
+          Most active: <b>neonwave</b>
+        </div>
+      </section>
+
+      <section>
+        <h2>Selection</h2>
+        <div class="stats" id="selection-info">Click a node or edge to inspect.</div>
+      </section>
+    </aside>
+  </div>
+
+  <script src="vis-network.min.js"></script>
+  <script src="graph-data.js"></script>
+  <script src="graph.js"></script>
+</body>
+</html>
