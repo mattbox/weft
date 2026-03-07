@@ -21,8 +21,11 @@ class SocialGraph:
             self._g.nodes[nick]["message_count"] = (
                 self._g.nodes[nick].get("message_count", 0) + 1
             )
+            aliases = self._g.nodes[nick].get("aliases", {})
+            aliases[nick] = aliases.get(nick, 0) + 1
+            self._g.nodes[nick]["aliases"] = aliases
         else:
-            self._g.add_node(nick, message_count=1)
+            self._g.add_node(nick, message_count=1, aliases={nick: 1})
 
     def contains(self, nick: str) -> bool:
         return self._g.has_node(nick)
@@ -46,9 +49,9 @@ class SocialGraph:
         add_edge("b", "a", w) affect the same edge.
         """
         if not self._g.has_node(source):
-            self._g.add_node(source, message_count=0)
+            self._g.add_node(source, message_count=0, aliases={source: 0})
         if not self._g.has_node(target):
-            self._g.add_node(target, message_count=0)
+            self._g.add_node(target, message_count=0, aliases={target: 0})
 
         if self._g.has_edge(source, target):
             self._g[source][target]["weight"] += weight
@@ -90,12 +93,19 @@ class SocialGraph:
         old_msg_count = old_data.get("message_count", 0)
 
         if not self._g.has_node(new_nick):
-            self._g.add_node(new_nick, message_count=0)
+            self._g.add_node(new_nick, message_count=0, aliases={new_nick: 0})
 
         # Accumulate message count
         self._g.nodes[new_nick]["message_count"] = (
             self._g.nodes[new_nick].get("message_count", 0) + old_msg_count
         )
+
+        # Merge aliases
+        old_aliases = old_data.get("aliases", {old_nick: old_msg_count})
+        new_aliases = self._g.nodes[new_nick].get("aliases", {})
+        for alias, count in old_aliases.items():
+            new_aliases[alias] = new_aliases.get(alias, 0) + count
+        self._g.nodes[new_nick]["aliases"] = new_aliases
 
         # Redirect all edges from old_nick to new_nick
         for neighbor in list(self._g.neighbors(old_nick)):
@@ -107,13 +117,34 @@ class SocialGraph:
 
         self._g.remove_node(old_nick)
 
+    def get_aliases(self, nick: str) -> dict[str, int]:
+        """Return the aliases dict for a node."""
+        if not self._g.has_node(nick):
+            return {}
+        return dict(
+            self._g.nodes[nick].get("aliases", {nick: self.get_message_count(nick)})
+        )
+
+    def get_primary_nick(self, nick: str) -> str:
+        """Return the alias with the highest message count."""
+        aliases = self.get_aliases(nick)
+        if not aliases:
+            return nick
+        return max(aliases, key=aliases.get)
+
     # ------------------------------------------------------------------
     # Serialisation helpers
     # ------------------------------------------------------------------
 
     def to_dict(self) -> dict:
         nodes = [
-            {"id": n, "message_count": self._g.nodes[n].get("message_count", 0)}
+            {
+                "id": n,
+                "message_count": self._g.nodes[n].get("message_count", 0),
+                "aliases": self._g.nodes[n].get(
+                    "aliases", {n: self._g.nodes[n].get("message_count", 0)}
+                ),
+            }
             for n in self._g.nodes()
         ]
         edges = [
@@ -126,7 +157,12 @@ class SocialGraph:
     def from_dict(cls, data: dict) -> "SocialGraph":
         g = cls()
         for node in data.get("nodes", []):
-            g._g.add_node(node["id"], message_count=node.get("message_count", 0))
+            aliases = node.get("aliases", {node["id"]: node.get("message_count", 0)})
+            g._g.add_node(
+                node["id"],
+                message_count=node.get("message_count", 0),
+                aliases=aliases,
+            )
         for edge in data.get("edges", []):
             src, tgt, w = edge["source"], edge["target"], edge["weight"]
             g._g.add_edge(src, tgt, weight=w)

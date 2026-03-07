@@ -48,21 +48,34 @@ function buildNodes(threshold) {
   });
 
   return rawNodes
+    // Filter out nodes with 0 messages (mentioned but never spoke).
+    .filter(n => n.message_count > 0)
     .filter(n => threshold === 0 || connected.has(n.id))
-    .map(n => ({
-      id: n.id,
-      label: n.id,
-      title: `${n.id}\nMessages: ${n.message_count}`,
-      size: nodeSize(n.message_count),
-      color: {
-        background: nickColor(n.id),
-        border: "#0d1117",
-        highlight: { background: nickColor(n.id), border: "#ffffff" },
-      },
-      font: { color: "#e6edf3", size: 13, strokeWidth: 2, strokeColor: "#0d1117" },
-      borderWidth: 2,
-      message_count: n.message_count,
-    }));
+    .map(n => {
+      const aliases = n.aliases || {};
+      const aliasEntries = Object.entries(aliases);
+      const primary = aliasEntries.length > 0
+        ? aliasEntries.reduce((a, b) => b[1] > a[1] ? b : a)[0]
+        : n.id;
+      const otherAliases = aliasEntries
+        .filter(([name]) => name !== primary)
+        .map(([name]) => name);
+      let tooltip = `${primary}\nMessages: ${n.message_count}`;
+      return {
+        id: n.id,
+        label: primary,
+        title: tooltip,
+        size: nodeSize(n.message_count),
+        color: {
+          background: nickColor(primary),
+          border: "#0d1117",
+          highlight: { background: nickColor(primary), border: "#ffffff" },
+        },
+        font: { color: "#e6edf3", size: 13, strokeWidth: 2, strokeColor: "#0d1117" },
+        borderWidth: 2,
+        message_count: n.message_count,
+      };
+    });
 }
 
 function buildEdges(threshold) {
@@ -139,7 +152,11 @@ searchInput.addEventListener("input", () => {
     });
     return;
   }
-  const match = rawNodes.find(n => n.id.toLowerCase().includes(q));
+  const match = rawNodes.find(n => {
+    if (n.id.toLowerCase().includes(q)) return true;
+    const aliases = n.aliases || {};
+    return Object.keys(aliases).some(a => a.toLowerCase().includes(q));
+  });
   if (match) {
     network.selectNodes([match.id]);
     network.focus(match.id, { scale: 1.2, animation: { duration: 400, easingFunction: "easeInOutQuad" } });
@@ -175,6 +192,15 @@ function showNodeInfo(nodeId) {
   const nodeData = rawNodes.find(n => n.id === nodeId);
   if (!nodeData) return;
 
+  const aliases = nodeData.aliases || {};
+  const aliasEntries = Object.entries(aliases);
+  const primary = aliasEntries.length > 0
+    ? aliasEntries.reduce((a, b) => b[1] > a[1] ? b : a)[0]
+    : nodeId;
+  const otherAliases = aliasEntries
+    .filter(([name]) => name !== primary)
+    .map(([name]) => name);
+
   const connections = rawEdges
     .filter(e => e.source === nodeId || e.target === nodeId)
     .map(e => ({
@@ -184,7 +210,10 @@ function showNodeInfo(nodeId) {
     .sort((a, b) => b.weight - a.weight)
     .slice(0, 8);
 
-  let html = `<b>${nodeId}</b><br>Messages: ${nodeData.message_count}`;
+  let html = `<b>${primary}</b><br>Messages: ${nodeData.message_count}`;
+  if (otherAliases.length > 0) {
+    html += `<br><span class="alias-label">AKA: ${otherAliases.join(", ")}</span>`;
+  }
   if (connections.length > 0) {
     html += `<br><br><b>Top connections:</b>`;
     connections.forEach(c => {
@@ -200,6 +229,8 @@ network.on("selectNode", (params) => {
 });
 
 network.on("selectEdge", (params) => {
+  // Skip when a node is also selected — selectNode already handled the display
+  if (params.nodes && params.nodes.length > 0) return;
   if (params.edges.length === 0) return;
   const edgeId = params.edges[0];
   const edgeData = edgesDS.get(edgeId);
