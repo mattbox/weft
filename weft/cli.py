@@ -34,10 +34,10 @@ from weft.visualization.visjs import render_html
 @click.option(
     "--output",
     "-o",
-    default="build/weft-output.html",
+    default="build/",
     show_default=True,
-    metavar="FILE",
-    help="Output HTML file.",
+    metavar="PATH",
+    help="Output HTML file or directory.",
 )
 @click.option(
     "--from",
@@ -218,6 +218,9 @@ def cli(
         save_graph(graph, save_state)
         click.echo(f"[weft] Graph state saved to {save_state}")
 
-    # Render HTML
-    render_html(graph, output)
-    click.echo(f"[weft] Output written to: {output}")
+    # Render HTML — if output is a directory, place graph.html inside it
+    out = Path(output)
+    if out.is_dir() or output.endswith("/") or not out.suffix:
+        out = out / "graph.html"
+    render_html(graph, out)
+    click.echo(f"[weft] Output written to: {out}")
