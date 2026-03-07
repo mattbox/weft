@@ -123,6 +123,35 @@ class TestMergeNick:
         assert g.contains("newnick")
         assert not g.contains("oldnick")
 
+    def test_merge_tracks_aliases(self):
+        g = SocialGraph()
+        g.add_node("alice")
+        g.add_node("alice_away")
+        g.merge_nick("alice_away", "alice")
+        aliases = g.get_aliases("alice")
+        assert "alice" in aliases
+        assert "alice_away" in aliases
+
+    def test_merge_primary_nick_is_most_active(self):
+        g = SocialGraph()
+        for _ in range(5):
+            g.add_node("alice")
+        g.add_node("alice_away")
+        g.merge_nick("alice_away", "alice")
+        assert g.get_primary_nick("alice") == "alice"
+
+    def test_merge_chain_preserves_all_aliases(self):
+        g = SocialGraph()
+        g.add_node("alice")
+        g.add_node("alice_away")
+        g.add_node("alice_mobile")
+        g.merge_nick("alice", "alice_away")
+        g.merge_nick("alice_away", "alice_mobile")
+        aliases = g.get_aliases("alice_mobile")
+        assert "alice" in aliases
+        assert "alice_away" in aliases
+        assert "alice_mobile" in aliases
+
 
 # ---------------------------------------------------------------------------
 # Persistence
@@ -161,3 +190,31 @@ class TestPersistence:
         edge_keys = [(e["source"], e["target"]) for e in d["edges"]]
         # Both directions should not both appear
         assert len(edge_keys) == 1
+
+    def test_aliases_persist_roundtrip(self, tmp_path):
+        g = SocialGraph()
+        for _ in range(3):
+            g.add_node("alice")
+        g.add_node("alice_away")
+        g.merge_nick("alice_away", "alice")
+
+        p = tmp_path / "graph.json"
+        save_graph(g, p)
+        g2 = load_graph(p)
+
+        aliases = g2.get_aliases("alice")
+        assert "alice" in aliases
+        assert "alice_away" in aliases
+        assert aliases["alice"] == 3
+
+    def test_load_legacy_json_without_aliases(self, tmp_path):
+        """Old JSON without aliases should get backward-compat default."""
+        legacy = {
+            "nodes": [{"id": "alice", "message_count": 5}],
+            "edges": [],
+        }
+        p = tmp_path / "legacy.json"
+        p.write_text(json.dumps(legacy))
+        g = load_graph(p)
+        aliases = g.get_aliases("alice")
+        assert aliases == {"alice": 5}
