@@ -34,7 +34,7 @@ from weft.visualization.visjs import render_html
 @click.option(
     "--output",
     "-o",
-    default="weft-output.html",
+    default="build/weft-output.html",
     show_default=True,
     metavar="FILE",
     help="Output HTML file.",
@@ -114,25 +114,19 @@ def cli(
     """
     p = Path(path)
 
-    # Parse date filters
-    fd: date | None = None
-    td: date | None = None
-    if from_date:
+    def _parse_date(value: str | None, flag: str) -> date | None:
+        if not value:
+            return None
         try:
-            fd = date.fromisoformat(from_date)
+            return date.fromisoformat(value)
         except ValueError:
             click.echo(
-                f"Error: invalid --from date '{from_date}'. Use YYYY-MM-DD.", err=True
+                f"Error: invalid {flag} date '{value}'. Use YYYY-MM-DD.", err=True
             )
             sys.exit(1)
-    if to_date:
-        try:
-            td = date.fromisoformat(to_date)
-        except ValueError:
-            click.echo(
-                f"Error: invalid --to date '{to_date}'. Use YYYY-MM-DD.", err=True
-            )
-            sys.exit(1)
+
+    fd = _parse_date(from_date, "--from")
+    td = _parse_date(to_date, "--to")
 
     # Normalise ignore set
     ignored: set[str] = {n.lower() for n in ignore_nicks}
@@ -187,8 +181,8 @@ def cli(
                 ):
                     graph.merge_nick(event.old_nick, event.new_nick)
 
-            elif isinstance(event, (QuitEvent,)):
-                pass  # No special handling needed for quits
+            elif isinstance(event, QuitEvent):
+                pass
 
             elif isinstance(event, (ChatMessage, ActionMessage)):
                 if event.nick.lower() in ignored:
