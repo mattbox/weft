@@ -11,9 +11,12 @@ build/
 # Unit test / coverage reports
 .pytest_cache/
 .ruff_cache/
+.tox/
+.coverage
+.coverage.*
 *.pkl
-*.tox
 *.json
+coverage.xml
 
 # Environments
 .venv/
