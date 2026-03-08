@@ -89,7 +89,7 @@ function buildEdges(threshold) {
       value: e.weight,
       width: edgeWidth(e.weight),
       title: `${e.source} \u2194 ${e.target}<br>Strength: ${e.weight.toFixed(2)}`,
-      color: { color: "rgba(88,166,255,0.25)", highlight: "#58a6ff", opacity: 0.7 },
+      color: { color: "rgba(84,160,255,0.25)", highlight: "#54a0ff", opacity: 0.7 },
       smooth: { type: "continuous" },
       source: e.source,
       target: e.target,

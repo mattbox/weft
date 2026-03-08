@@ -3,9 +3,9 @@
 
 // ---- Deterministic colour from nick ----
 const palette = [
-  "#58a6ff","#3fb950","#d2a8ff","#ffa657","#ff7b72",
-  "#79c0ff","#56d364","#bc8cff","#ffb86c","#f97583",
-  "#a5d6ff","#7ee787","#e2c5ff","#ffc680","#ffa198",
+  "#ff6b6b","#ff9f43","#feca57","#00ff99","#48dbfb",
+  "#00fff5","#686de0","#e056fd","#ff00ff","#badc58",
+  "#ff0066","#54a0ff","#6600ff","#ff6600","#01a3a4",
 ];
 
 function hashNick(nick) {
@@ -23,7 +23,7 @@ function nickColor(nick) {
 // ---- Scale helpers ----
 const msgCounts = rawNodes.map(n => n.message_count);
 const maxMsg = Math.max(...msgCounts, 1);
-const minSize = 10, maxSize = 25;
+const minSize = 10, maxSize = 40;
 
 function nodeSize(count) {
   return minSize + (Math.sqrt(count) / Math.sqrt(maxMsg)) * (maxSize - minSize);
@@ -89,7 +89,7 @@ function buildEdges(threshold) {
       value: e.weight,
       width: edgeWidth(e.weight),
       title: `${e.source} \u2194 ${e.target}<br>Strength: ${e.weight.toFixed(2)}`,
-      color: { color: "rgba(88,166,255,0.25)", highlight: "#58a6ff", opacity: 0.7 },
+      color: { color: "rgba(84,160,255,0.25)", highlight: "#54a0ff", opacity: 0.7 },
       smooth: { type: "continuous" },
       source: e.source,
       target: e.target,
@@ -107,7 +107,7 @@ const network = new vis.Network(container, { nodes: nodesDS, edges: edgesDS }, {
     barnesHut: {
       gravitationalConstant: -8000,
       centralGravity: 0.3,
-      springLength: 140,
+      springLength: 200,
       springConstant: 0.04,
       damping: 0.09,
     },
