@@ -4,6 +4,7 @@ indirect_addressing_weight = 0.5
 adjacency_weight = 0.2
 binary_sequence_weight = 0.8
 binary_sequence_window = 5
+ai_weight = 0.7
 ai_enabled = false
 ai_model = "ollama/llama3.2"
 
@@ -15,4 +16,4 @@ amount = 0.02
 ignore_nicks = ["chanserv", "nickserv"]
 
 [output]
-default_filename = "weft-output.html"
+default_path = "build/"

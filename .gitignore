@@ -31,3 +31,5 @@ logs/
 
 # AI
 CLAUDE.md
+.codex
+AGENT.md

@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import sys
+import tomllib
 from datetime import date
 from pathlib import Path
 
 import click
+from click.core import ParameterSource
 
 from weft.graph.persistence import load_graph, save_graph
 from weft.graph.social_graph import SocialGraph
@@ -27,6 +29,49 @@ from weft.parser.znc import (
     parse_file,
 )
 from weft.visualization.visjs import render_html
+
+DEFAULT_CONFIG = {
+    "inference": {
+        "direct_addressing_weight": 1.0,
+        "indirect_addressing_weight": 0.5,
+        "adjacency_weight": 0.2,
+        "binary_sequence_weight": 0.8,
+        "binary_sequence_window": 5,
+        "ai_weight": 0.7,
+        "ai_enabled": False,
+        "ai_model": "ollama/llama3.2",
+    },
+    "decay": {
+        "enabled": True,
+        "amount": 0.02,
+    },
+    "graph": {
+        "ignore_nicks": ["chanserv", "nickserv"],
+    },
+    "output": {
+        "default_path": "build/",
+    },
+}
+
+
+def _load_project_config(path: str | Path = "config.toml") -> dict:
+    """Load config.toml from the current working directory if it exists."""
+    config = {
+        section: values.copy()
+        for section, values in DEFAULT_CONFIG.items()
+    }
+    config_path = Path(path)
+    if not config_path.exists():
+        return config
+
+    with config_path.open("rb") as f:
+        loaded = tomllib.load(f)
+
+    for section, defaults in config.items():
+        section_values = loaded.get(section, {})
+        if isinstance(section_values, dict):
+            defaults.update(section_values)
+    return config
 
 
 @click.command()
@@ -96,7 +141,9 @@ from weft.visualization.visjs import render_html
 @click.option(
     "--no-decay", is_flag=True, default=False, help="Disable temporal decay entirely."
 )
+@click.pass_context
 def cli(
+    ctx: click.Context,
     path: str,
     output: str,
     from_date: str | None,
@@ -113,6 +160,7 @@ def cli(
     PATH    may be a single .log file or a directory containing YYYY-MM-DD.log files.
     """
     p = Path(path)
+    config = _load_project_config()
 
     def _parse_date(value: str | None, flag: str) -> date | None:
         if not value:
@@ -128,8 +176,20 @@ def cli(
     fd = _parse_date(from_date, "--from")
     td = _parse_date(to_date, "--to")
 
+    if ctx.get_parameter_source("output") is ParameterSource.DEFAULT:
+        output = config["output"]["default_path"]
+    if ctx.get_parameter_source("ai_enabled") is ParameterSource.DEFAULT:
+        ai_enabled = config["inference"]["ai_enabled"]
+    if ctx.get_parameter_source("ai_model") is ParameterSource.DEFAULT:
+        ai_model = config["inference"]["ai_model"]
+    if ctx.get_parameter_source("decay_amount") is ParameterSource.DEFAULT:
+        decay_amount = config["decay"]["amount"]
+    if ctx.get_parameter_source("no_decay") is ParameterSource.DEFAULT:
+        no_decay = not config["decay"]["enabled"]
+
     # Normalise ignore set
-    ignored: set[str] = {n.lower() for n in ignore_nicks}
+    ignored: set[str] = {n.lower() for n in config["graph"]["ignore_nicks"]}
+    ignored.update(n.lower() for n in ignore_nicks)
     # Always ignore these service bots
     ignored.update({"chanserv", "nickserv"})
 
@@ -151,16 +211,29 @@ def cli(
         graph = SocialGraph()
 
     # Set up heuristics — wire direct into indirect so it can skip already-matched nicks
-    direct_h = DirectAddressingHeuristic(weight=1.0)
-    indirect_h = IndirectAddressingHeuristic(weight=0.5, direct_heuristic=direct_h)
+    direct_h = DirectAddressingHeuristic(
+        weight=config["inference"]["direct_addressing_weight"]
+    )
+    indirect_h = IndirectAddressingHeuristic(
+        weight=config["inference"]["indirect_addressing_weight"],
+        direct_heuristic=direct_h,
+    )
     heuristics = [
         direct_h,
         indirect_h,
-        AdjacencyHeuristic(weight=0.2),
-        BinarySequenceHeuristic(weight=0.8, window=5),
+        AdjacencyHeuristic(weight=config["inference"]["adjacency_weight"]),
+        BinarySequenceHeuristic(
+            weight=config["inference"]["binary_sequence_weight"],
+            window=config["inference"]["binary_sequence_window"],
+        ),
     ]
     if ai_enabled:
-        heuristics.append(AIHeuristic(weight=0.7, model=ai_model))
+        heuristics.append(
+            AIHeuristic(
+                weight=config["inference"]["ai_weight"],
+                model=ai_model,
+            )
+        )
         click.echo(f"[weft] AI heuristic enabled (model: {ai_model})")
 
     # Process events
@@ -172,7 +245,7 @@ def cli(
         for event in bar:
             if isinstance(event, JoinEvent):
                 if event.nick.lower() not in ignored:
-                    graph.add_node(event.nick)
+                    graph.ensure_node(event.nick)
 
             elif isinstance(event, NickChangeEvent):
                 if (

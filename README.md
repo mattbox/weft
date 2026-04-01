@@ -51,6 +51,11 @@ uv run weft day1.log --save-state state.json
 uv run weft day2.log --load-state state.json --save-state state.json
 ```
 
+## Configuration
+
+Runtime defaults are loaded from `config.toml` in the current working directory.
+CLI flags override config values when passed explicitly.
+
 ## CLI Reference
 
 ```
@@ -60,7 +65,7 @@ Arguments:
   PATH    ZNC log file or directory of YYYY-MM-DD.log files
 
 Options:
-  -o, --output FILE          Output HTML file [default: weft-output.html]
+  -o, --output PATH          Output HTML file or directory [default: build/]
   --from DATE                Start date filter (YYYY-MM-DD)
   --to DATE                  End date filter (YYYY-MM-DD)
   --ignore NICK              Ignore a nick (repeatable, case-insensitive)

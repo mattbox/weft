@@ -15,6 +15,12 @@ from weft.graph.social_graph import SocialGraph
 
 
 class TestAddNode:
+    def test_ensure_node_creates_node_without_counting_message(self):
+        g = SocialGraph()
+        g.ensure_node("alice")
+        assert g.contains("alice")
+        assert g.get_message_count("alice") == 0
+
     def test_add_node_creates_node(self):
         g = SocialGraph()
         g.add_node("alice")
@@ -29,6 +35,12 @@ class TestAddNode:
     def test_message_count_zero_by_default(self):
         g = SocialGraph()
         assert g.get_message_count("nobody") == 0
+
+    def test_add_node_after_ensure_node_counts_first_message(self):
+        g = SocialGraph()
+        g.ensure_node("alice")
+        g.add_node("alice")
+        assert g.get_message_count("alice") == 1
 
 
 class TestAddEdge:

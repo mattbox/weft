@@ -15,17 +15,20 @@ class SocialGraph:
     # Node operations
     # ------------------------------------------------------------------
 
+    def ensure_node(self, nick: str) -> None:
+        """Ensure a nick exists without counting it as a spoken message."""
+        if not self._g.has_node(nick):
+            self._g.add_node(nick, message_count=0, aliases={nick: 0})
+
     def add_node(self, nick: str) -> None:
-        """Add a node (or increment its message count if already present)."""
-        if self._g.has_node(nick):
-            self._g.nodes[nick]["message_count"] = (
-                self._g.nodes[nick].get("message_count", 0) + 1
-            )
-            aliases = self._g.nodes[nick].get("aliases", {})
-            aliases[nick] = aliases.get(nick, 0) + 1
-            self._g.nodes[nick]["aliases"] = aliases
-        else:
-            self._g.add_node(nick, message_count=1, aliases={nick: 1})
+        """Record a spoken message for a nick, creating the node if needed."""
+        self.ensure_node(nick)
+        self._g.nodes[nick]["message_count"] = self._g.nodes[nick].get(
+            "message_count", 0
+        ) + 1
+        aliases = self._g.nodes[nick].get("aliases", {})
+        aliases[nick] = aliases.get(nick, 0) + 1
+        self._g.nodes[nick]["aliases"] = aliases
 
     def contains(self, nick: str) -> bool:
         return self._g.has_node(nick)
@@ -48,10 +51,8 @@ class SocialGraph:
         Since the graph is undirected, add_edge("a", "b", w) and
         add_edge("b", "a", w) affect the same edge.
         """
-        if not self._g.has_node(source):
-            self._g.add_node(source, message_count=0, aliases={source: 0})
-        if not self._g.has_node(target):
-            self._g.add_node(target, message_count=0, aliases={target: 0})
+        self.ensure_node(source)
+        self.ensure_node(target)
 
         if self._g.has_edge(source, target):
             self._g[source][target]["weight"] += weight
@@ -92,8 +93,7 @@ class SocialGraph:
         old_data = self._g.nodes[old_nick]
         old_msg_count = old_data.get("message_count", 0)
 
-        if not self._g.has_node(new_nick):
-            self._g.add_node(new_nick, message_count=0, aliases={new_nick: 0})
+        self.ensure_node(new_nick)
 
         # Accumulate message count
         self._g.nodes[new_nick]["message_count"] = (
